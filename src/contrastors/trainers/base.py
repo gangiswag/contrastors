@@ -49,9 +49,9 @@ class BaseTrainer(metaclass=ABCMeta):
         self.print(f"Using dtype: {dtype}")
         self.print(f"Using {dist.get_world_size() if dist.is_initialized() else 1} GPUs")
 
-        self.deepspeed = config.deepspeed
+        self.deepspeed = config.train_args.deepspeed
         if self.deepspeed:
-            ds_config = json.load(open(config.deepspeed_config))
+            ds_config = json.load(open(config.train_args.deepspeed_config))
         else:
             ds_config = {}
 
@@ -80,7 +80,7 @@ class BaseTrainer(metaclass=ABCMeta):
             )
 
             self.engine = model
-            self.model = {"model": model}
+            self.model = {"model": model, "logit_scale": self.model["logit_scale"]}
             if optimizer is not None:
                 self.optimizer = optimizer
             if dataloader is not None:
