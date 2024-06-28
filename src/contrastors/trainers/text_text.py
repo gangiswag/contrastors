@@ -35,6 +35,7 @@ class TextTextTrainer(BaseTrainer):
                 pooling=config.pooling,
                 logit_scale=config.logit_scale,
                 nomic_encoder=config.nomic_encoder,
+                use_fused_kernels=config.use_fused_kernels,
                 trainable_logit_scale=config.trainable_logit_scale,
                 hamming=config.hamming,
                 pretrained=config.pretrained,
@@ -48,7 +49,7 @@ class TextTextTrainer(BaseTrainer):
                 model_config.projection_dim = config.projection_dim
             if config.gradient_checkpointing:
                 model_config.gradient_checkpointing = True
-            model = BiEncoder.from_pretrained(config.pretrained, config=model_config)
+            model = BiEncoder.from_pretrained(config.checkpoint, config=model_config)
 
         if self.distributed and not self.deepspeed:
             model = model.to("cuda")
@@ -179,7 +180,8 @@ class TextTextTrainer(BaseTrainer):
 
     def _forward_step(self, model, batch, logit_scale, matryoshka_dims=None, matroyshka_loss_weights=None, **kwargs):
         normalize = True if matryoshka_dims is None else False
-        dataset_name = batch.pop("dataset_name")
+        # dataset_name = batch.pop("dataset_name")
+        dataset_name = ""        
         query_outputs = model(
             input_ids=batch["query_input_ids"].to(model.device),
             attention_mask=batch["query_attention_mask"].to(model.device),

@@ -226,7 +226,10 @@ class BiEncoder(PreTrainedModel):
                 else:
                     self.trunk = NomicBertModel(config=model_config, add_pooling_layer=False)
         else:
-            self.trunk = AutoModel.from_pretrained(config.model_name, trust_remote_code=True, add_pooling_layer=False)
+            if "gte-" in config.model_name:
+                self.trunk = AutoModel.from_pretrained(config.model_name, trust_remote_code=True, unpad_inputs=True, use_memory_efficient_attention=True, add_pooling_layer=False)
+            else:
+                self.trunk = AutoModel.from_pretrained(config.model_name, trust_remote_code=True, add_pooling_layer=False)
 
         if config.freeze:
             self.trunk.eval()
@@ -266,7 +269,7 @@ class BiEncoder(PreTrainedModel):
     def forward(self, input_ids, attention_mask=None, is_padded_inputs=True, normalize=True, binarize=False, **kwargs):
         context = torch.no_grad if self.frozen_trunk else nullcontext
         with context():
-            trunk_output = self.trunk(input_ids, attention_mask=attention_mask, **kwargs)
+            trunk_output = self.trunk(input_ids, attention_mask=attention_mask)
         trunk_output = trunk_output[0]
 
         if self.selector is not None:

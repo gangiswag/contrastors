@@ -16,7 +16,7 @@ class TrainArgs(BaseModel):
     checkpoint: Optional[str] = None
     wandb: bool
     wandb_project_name: str
-    wandb_entity: str
+    wandb_entity: Optional[str] = None
     wandb_run_name: Optional[str] = None
     log_grads_every: int
     log_lr_every: int
@@ -27,6 +27,8 @@ class TrainArgs(BaseModel):
     gradient_accumulation_steps: Optional[int] = 1
     # if using deepspeed, this will be ignored
     schedule_type: str
+    deepspeed: bool
+    deepspeed_config: Optional[str] = None
     max_grad_norm: float
     adam_beta1: float
     adam_beta2: float
@@ -139,6 +141,7 @@ class ModelArgs(BaseModel):
     trainable_logit_scale: Optional[bool] = False
     seq_len: Optional[int] = None
     rotary_emb_fraction: Optional[float] = None
+    use_fused_kernels: Optional[bool] = True
     rotary_emb_base: Optional[int] = 10_000
     pad_vocab_to_multiple_of: Optional[int] = None
     use_rms_norm: Optional[bool] = None
@@ -206,8 +209,6 @@ class Config(BaseModel):
     ] = None
     text_data_args: Optional[ContrastiveDataArgs] = None
     model_args: Optional[ModelArgs] = None
-    deepspeed: Optional[bool] = False
-    deepspeed_config: Optional[dict] = None
 
     text_model_args: Optional[ModelArgs] = None
     vision_model_args: Optional[ModelArgs] = None
