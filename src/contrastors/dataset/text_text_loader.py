@@ -624,7 +624,7 @@ def collate_local_ds(batch, tokenizer, add_prefix=False, query_only=None, path2p
 
             collected = [f"{prefix}: {text}" for prefix, text in zip(prefixes, collected)]
 
-        tokenized = tokenizer(collected, padding="max_length", truncation=True, return_tensors="pt")
+        tokenized = tokenizer(collected, padding=True, truncation=True, return_tensors="pt")
         tokenized = {f"{col}_{k}": v for k, v in tokenized.items()}
         tokenized_inputs = {**tokenized_inputs, **tokenized}
 
@@ -643,6 +643,67 @@ def get_local_dataloader(ds_spec, batch_size, tokenizer, num_negatives, seed, ad
 
     collate_fn = lambda x: collate_local_ds(
         x, tokenizer, add_prefix=add_prefix, query_only=dataset.query_only, path2prefix=dataset.path2prefix
+    )
+
+    dataloader = DataLoader(
+        dataset, batch_size=batch_size, sampler=sampler, collate_fn=collate_fn, drop_last=True, num_workers=num_workers
+    )
+
+    return dataloader
+
+def collate_local_query_document_ds(batch, query_tokenizer, document_tokenizer, add_prefix=False, query_only=None, path2prefix=None):
+    # assume all records have same column names
+    # assume dataset_name is in there
+    ds_names = [sample.pop("dataset_name") for sample in batch]
+    keys = batch[0].keys()
+    tokenized_inputs = {}
+    for col in keys:
+        collected = [sample[col] for sample in batch]
+        if isinstance(collected[0], list):
+            collected = sum(collected, [])
+            # in case we have multiple negatives, we need to repeat the dataset name N negative times
+            ds_names = sum([[ds_name] * len(sample[col]) for ds_name, sample in zip(ds_names, batch)], [])
+
+        if add_prefix:
+            # add prefix to beginning of column
+            if path2prefix:
+                # path2prefix is a dict of {ds_name: {col: prefix}}
+                prefixes = [path2prefix[ds_name][col] for ds_name in ds_names]
+            else:
+                prefix = KEY2PREFIX[col]
+                if query_only and col != "query":
+                    prefixes = []
+                    for ds_name in ds_names:
+                        if ds_name in query_only:
+                            prefixes.append("query")
+                        else:
+                            prefixes.append(prefix)
+                else:
+                    prefixes = [prefix] * len(collected)
+
+            collected = [f"{prefix}: {text}" for prefix, text in zip(prefixes, collected)]
+        if col == "query":
+            tokenized = query_tokenizer(collected, padding="max_length", truncation=True, return_tensors="pt")
+        else:
+            tokenized = document_tokenizer(collected, padding="max_length", truncation=True, return_tensors="pt")
+        tokenized = {f"{col}_{k}": v for k, v in tokenized.items()}
+        tokenized_inputs = {**tokenized_inputs, **tokenized}
+
+    return tokenized_inputs
+
+
+def get_local_query_document_dataloader(ds_spec, batch_size, query_tokenizer, document_tokenizer, num_negatives, seed, add_prefix, num_workers=0, epoch=0):
+    dataset = LocalShardDataset(ds_spec, num_negatives=num_negatives, seed=seed)
+    if dist.is_initialized():
+        sampler = DistributedSampler(
+            dataset, shuffle=True, num_replicas=dist.get_world_size(), rank=dist.get_rank(), seed=seed
+        )
+        sampler.set_epoch(epoch)
+    else:
+        sampler = None
+
+    collate_fn = lambda x: collate_local_query_document_ds(
+        x, query_tokenizer, document_tokenizer, add_prefix=add_prefix, query_only=dataset.query_only, path2prefix=dataset.path2prefix
     )
 
     dataloader = DataLoader(

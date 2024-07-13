@@ -181,7 +181,7 @@ class TextTextTrainer(BaseTrainer):
     def _forward_step(self, model, batch, logit_scale, matryoshka_dims=None, matroyshka_loss_weights=None, **kwargs):
         normalize = True if matryoshka_dims is None else False
         # dataset_name = batch.pop("dataset_name")
-        dataset_name = ""        
+        dataset_name = ""
         query_outputs = model(
             input_ids=batch["query_input_ids"].to(model.device),
             attention_mask=batch["query_attention_mask"].to(model.device),

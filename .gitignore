@@ -19,6 +19,7 @@ scripts/text/embedding_training_data/dotted/*
 scripts/video/preproc/
 *.csv
 scripts/reddit/downloaded/*
+scripts/*.ipynb
 *.jsonl
 *.gz
 *.parquet

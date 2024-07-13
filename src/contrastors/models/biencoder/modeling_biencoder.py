@@ -57,20 +57,30 @@ class LastTokenPooling(nn.Module):
         # get the embedding corresponding to the first eos token
         # we don't substract 1 because the eos token is already included in the input_ids and attention_mask
         # and we want to get the embedding of the last token
-        sequence_lengths = attention_mask.sum(-1) - 1
-        selected_tokens = input_ids[torch.arange(input_ids.shape[0]), sequence_lengths]
 
-        if not torch.all(selected_tokens == self.eos_token_id):
-            raise ValueError(
-                f"The last token of the input_ids is not the eos token: {selected_tokens}\n{input_ids}\n{sequence_lengths}"
-            )
-        prev_token = input_ids[torch.arange(input_ids.shape[0]), sequence_lengths - 1]
-        if torch.any(prev_token == self.eos_token_id):
-            raise ValueError(
-                f"The second to last token of the input_ids is the eos token: {selected_tokens}\n{input_ids}\n{sequence_lengths}"
-            )
+        left_padding = (attention_mask[:, -1].sum() == attention_mask.shape[0])
+        if left_padding:
+            selected_tokens = input_ids[:, -1]
+            if not torch.all(selected_tokens == self.eos_token_id):
+                raise ValueError(
+                    f"The last token of the input_ids is not the eos token: {selected_tokens}\n{input_ids}\n{sequence_lengths}"
+                )
+            return hidden_states[:, -1]
+        else:
+            sequence_lengths = attention_mask.sum(-1) - 1
+            selected_tokens = input_ids[torch.arange(input_ids.shape[0]), sequence_lengths]
 
-        embs = hidden_states[torch.arange(hidden_states.shape[0]), sequence_lengths]
+            if not torch.all(selected_tokens == self.eos_token_id):
+                raise ValueError(
+                    f"The last token of the input_ids is not the eos token: {selected_tokens}\n{input_ids}\n{sequence_lengths}"
+                )
+            prev_token = input_ids[torch.arange(input_ids.shape[0]), sequence_lengths - 1]
+            if torch.any(prev_token == self.eos_token_id):
+                raise ValueError(
+                    f"The second to last token of the input_ids is the eos token: {selected_tokens}\n{input_ids}\n{sequence_lengths}"
+                )
+
+            embs = hidden_states[torch.arange(hidden_states.shape[0]), sequence_lengths]
 
         return embs
 
@@ -226,8 +236,12 @@ class BiEncoder(PreTrainedModel):
                 else:
                     self.trunk = NomicBertModel(config=model_config, add_pooling_layer=False)
         else:
-            if "gte-" in config.model_name:
+            if "gte-large" in config.model_name or "gte-base" in config.model_name:
                 self.trunk = AutoModel.from_pretrained(config.model_name, trust_remote_code=True, unpad_inputs=True, use_memory_efficient_attention=True, add_pooling_layer=False)
+            elif "-instruct" in config.model_name:
+                self.trunk = AutoModel.from_pretrained(config.model_name, trust_remote_code=True)
+                tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+                self.eos_token_id = tokenizer.eos_token_id
             else:
                 self.trunk = AutoModel.from_pretrained(config.model_name, trust_remote_code=True, add_pooling_layer=False)
 

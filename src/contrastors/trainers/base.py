@@ -170,7 +170,7 @@ class BaseTrainer(metaclass=ABCMeta):
 
     def get_tokenizer(self, config):
         config = config.model_args
-        tokenizer = AutoTokenizer.from_pretrained(config.tokenizer_name)
+        tokenizer = AutoTokenizer.from_pretrained(config.tokenizer_name, trust_remote_code=True)
         tokenizer.model_max_length = config.seq_len
 
         if tokenizer.pad_token is None:

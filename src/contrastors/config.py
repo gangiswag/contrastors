@@ -175,7 +175,7 @@ class ModelArgs(BaseModel):
     @field_validator('model_type')
     @classmethod
     def validate_model_type(cls, model_type):
-        if model_type not in ["encoder", "mlm", "glue", "image_text", "locked_text"]:
+        if model_type not in ["encoder", "mlm", "glue", "image_text", "locked_text", "query_document"]:
             raise ValueError(f"Model type {model_type} not found in model registry")
         return model_type
 
@@ -212,5 +212,7 @@ class Config(BaseModel):
 
     text_model_args: Optional[ModelArgs] = None
     vision_model_args: Optional[ModelArgs] = None
+    query_model_args: Optional[ModelArgs] = None
+    document_model_args: Optional[ModelArgs] = None
     tower_model_args: Optional[ModelArgs] = None
     transforms: Optional[TransformsConfig] = None
