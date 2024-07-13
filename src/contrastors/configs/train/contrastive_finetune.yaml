@@ -14,9 +14,9 @@ train_args:
   # if using deepspeed, this will be ignored
   schedule_type: "linear"
   max_grad_norm: 1.0
-  gradient_accumulation_steps: 8
-  deepspeed: false
-  # deepspeed_config: "configs/deepspeed/ds_config.json"
+  gradient_accumulation_steps: 2
+  deepspeed: true
+  deepspeed_config: "configs/deepspeed/ds_config.json"
   adam_beta1: 0.9
   adam_beta2: 0.999
   grad_cache: false
@@ -32,7 +32,7 @@ model_args:
   seq_len: 512
   pooling: "cls"
   nomic_encoder: false
-  add_prefix: true
+  add_prefix: false
   use_fused_kernels: false
   num_negatives: 10 
   tokenizer_name: "Alibaba-NLP/gte-large-en-v1.5"
@@ -42,7 +42,11 @@ model_args:
 data_args:
   input_shards: "configs/data/finetune_triplets.yaml"
   workers: 8 
+<<<<<<< HEAD
   batch_size: 96
+=======
+  batch_size: 128
+>>>>>>> 94d1a58 (Add separate query - document encoders)
   seed: 42
   shuffle: false
   download: true
