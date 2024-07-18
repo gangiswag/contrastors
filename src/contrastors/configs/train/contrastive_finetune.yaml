@@ -15,7 +15,8 @@ train_args:
   schedule_type: "linear"
   max_grad_norm: 1.0
   gradient_accumulation_steps: 2
-  deepspeed: false
+  deepspeed: true
+  deepspeed_config: "configs/deepspeed/ds_config.json"
   adam_beta1: 0.9
   adam_beta2: 0.999
   grad_cache: false
