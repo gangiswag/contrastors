@@ -30,19 +30,18 @@ model_args:
   trainable_logit_scale: false
   seq_len: 1024
   pooling: "cls"
-  checkpoint: /shared/nas2/revanth3/query_free_rag/exp/sanity/gte-large-v1.5/final_model
   nomic_encoder: false
-  add_prefix: true
+  add_prefix: false
   use_fused_kernels: false
   num_negatives: 7 
   tokenizer_name: "Alibaba-NLP/gte-large-en-v1.5"
-  model_name: /shared/nas2/revanth3/query_free_rag/exp/sanity/gte-large-v1.5/final_model
+  model_name: "Alibaba-NLP/gte-large-en-v1.5"
   pretrained: true
 
 data_args:
   input_shards: "configs/data/finetune_triplets.yaml"
   workers: 8 
-  batch_size: 64
+  batch_size: 128
   seed: 42
   shuffle: false
   download: true
