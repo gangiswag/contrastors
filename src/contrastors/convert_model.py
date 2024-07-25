@@ -12,7 +12,7 @@ def parse_args():
     return parser.parse_args()
 
 def get_tokenizer(config): 
-        tokenizer = AutoTokenizer.from_pretrained(config.model_args.tokenizer_name, remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(config.model_args.tokenizer_name, trust_remote_code=True)
 
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
