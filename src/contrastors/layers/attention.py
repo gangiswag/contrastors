@@ -11,7 +11,6 @@ from flash_attn import (
     flash_attn_varlen_qkvpacked_func,
 )
 from flash_attn.bert_padding import pad_input, unpad_input
-from flash_attn.ops.fused_dense import FusedDense
 
 from contrastors.layers.embedding import DynamicNTKRotaryEmbedding, VarLengthRotaryEmbedding, apply_rot_embed_cat
 

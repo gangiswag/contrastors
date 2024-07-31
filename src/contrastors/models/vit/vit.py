@@ -3,8 +3,6 @@ import math
 
 import torch
 import torch.nn as nn
-from flash_attn.ops.layer_norm import dropout_add_layer_norm
-from flash_attn.ops.rms_norm import RMSNorm
 from torchvision.ops import StochasticDepth
 from transformers import GPT2Config, PreTrainedModel
 from transformers.modeling_outputs import BaseModelOutputWithPast

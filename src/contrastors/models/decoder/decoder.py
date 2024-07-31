@@ -4,8 +4,6 @@ from typing import List, Optional
 
 import torch
 import torch.nn as nn
-from flash_attn.ops.layer_norm import dropout_add_layer_norm, dropout_add_layer_norm_parallel_residual
-from flash_attn.ops.rms_norm import RMSNorm, dropout_add_rms_norm, dropout_add_rms_norm_parallel_residual
 from transformers import GPT2Config, PreTrainedModel
 from transformers.modeling_outputs import BaseModelOutputWithPast
 
@@ -17,6 +15,12 @@ from contrastors.models.decoder.open_lm import remap_state_dict_hf_open_lm
 from contrastors.models.model_utils import state_dict_from_pretrained
 
 logger = logging.getLogger(__name__)
+
+try:
+    from flash_attn.ops.layer_norm import dropout_add_layer_norm, dropout_add_layer_norm_parallel_residual
+    from flash_attn.ops.rms_norm import RMSNorm, dropout_add_rms_norm, dropout_add_rms_norm_parallel_residual
+except ImportError:
+    dropout_add_layer_norm = dropout_add_layer_norm_parallel_residual = RMSNorm = dropout_add_rms_norm = dropout_add_rms_norm_parallel_residual = None
 
 
 class DecoderPretrainedModel(PreTrainedModel):

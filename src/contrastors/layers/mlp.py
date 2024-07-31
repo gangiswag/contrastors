@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from flash_attn.ops.activations import swiglu
-from flash_attn.ops.fused_dense import FusedDense
 
 
 class MLP(nn.Module):

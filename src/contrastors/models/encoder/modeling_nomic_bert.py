@@ -14,8 +14,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
-from flash_attn.ops.rms_norm import RMSNorm, rms_norm
 from safetensors.torch import load_file as safe_load_file
 from transformers import GPT2Config, PreTrainedModel
 from transformers.models.bert.modeling_bert import (
@@ -44,6 +42,13 @@ try:
     from flash_attn.losses.cross_entropy import CrossEntropyLoss
 except ImportError:
     CrossEntropyLoss = None
+
+
+try:
+    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
+    from flash_attn.ops.rms_norm import RMSNorm, rms_norm
+except ImportError:
+    index_first_axis = pad_input = unpad_input = RMSNorm = rms_norm = None
 
 
 logger = logging.getLogger(__name__)
