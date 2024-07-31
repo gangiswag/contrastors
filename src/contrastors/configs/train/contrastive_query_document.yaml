@@ -37,7 +37,7 @@ query_model_args:
   seq_len: 128
   pooling: "last"
   tokenizer_name: "Alibaba-NLP/gte-Qwen2-7B-instruct"
-  model_name: "/shared/nas2/revanth3/query_free_rag/exp/sanity/tuned_query_document/final_model"
+  model_name: "Alibaba-NLP/gte-Qwen2-7B-instruct"
   pretrained: true
   gradient_checkpointing: true
   # freeze: true
