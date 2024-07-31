@@ -1,0 +1,80 @@
+datasets:
+  - name: "msmaro"
+    bucket: "s3://contrastive/msmarco_distillation_simlm_rescored_reranked_min15/shard-{00000..00004}.jsonl.gz"
+    query_prefix: "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery"
+    document_prefix: "search_document"
+    objective: 
+      type: "triplet"
+      columns: ["query", "document", "negatives"]
+
+  - name: "nq_triples"
+    bucket: "s3://contrastive/nq_cocondensor_hn_mine_reranked_min15/shard-00000.jsonl.gz"
+    query_prefix: "Instruct: Given a question, retrieve Wikipedia passages that answer the question\nQuestion"
+    document_prefix: "search_document"
+    objective: 
+      type: "triplet"
+      columns: ["query", "document", "negatives"]
+
+  # - name: "nli_triplets"
+  #   bucket: "s3://contrastive/nli_simcse_50negs_fixed/shard-{00000..00002}.jsonl.gz"
+  #   query_prefix: "Instruct: Retrieve semantically similar text.\nQuery"
+  #   document_prefix: "classification"
+  #   objective: 
+  #     type: "triplet"
+  #     columns: ["query", "document", "negatives"]
+
+#   # - name: "reddit"
+#   #   bucket: "s3://contrastive/reddit_triples/shard-{00000..00001}.jsonl.gz"
+#   #   query_prefix: "Instruct: Identify Reddit posts with similar themes based on the given post\nPost"
+#   #   document_prefix: "clustering"
+#   #   objective: 
+#   #     type: "triplet"
+#   #     columns: ["query", "document", "negatives"]
+
+  # - name: "medi_wiki"
+  #   bucket: "s3://contrastive/medi_sts_wiki_rephrasal/shard-00000.jsonl.gz"
+  #   query_prefix: "Instruct: Given a StackExchange question, retrieve duplicate questions\nQuestion"
+  #   document_prefix: "classification"
+  #   objective: 
+  #     type: "triplet"
+  #     columns: ["query", "pos", "neg"]
+
+  # - name: "medi_stackexchange"
+  #   bucket: "s3://contrastive/medi_sts_stackexchange_dupe/shard-00000.jsonl.gz"
+  #   query_prefix: "Instruct: Given a StackExchange question, retrieve duplicate questions\nQuestion"
+  #   document_prefix: "classification"
+  #   objective: 
+  #     type: "triplet"
+  #     columns: ["query", "pos", "neg"]
+
+  # - name: "medi_flickr"
+  #   bucket: "s3://contrastive/medi_sts_flickr_sampled/shard-00000.jsonl.gz"
+  #   query_prefix: "Instruct: Given a caption, retrieve duplicate captions\nCaption"
+  #   document_prefix: "classification"
+  #   objective: 
+  #     type: "triplet"
+  #     columns: ["query", "pos", "neg"]
+
+  # - name: "medi_supernli"
+  #   bucket: "s3://contrastive/medi_supernli_sampled/shard-00000.jsonl.gz"
+  #   query_only: true
+  #   query_prefix: "classification"
+  #   objective: 
+  #     type: "triplet"
+  #     columns: ["query", "pos", "neg"]
+
+  - name: "hotpot"
+    bucket: "s3://contrastive/hotpotqa_hn_mine_shuffled/shard-{00000..00001}.jsonl.gz"
+    query_prefix: "Instruct: Given a multi-hop question, retrieve documents that can help answer the question\nQuestion"
+    document_prefix: "search_document"
+    objective: 
+      type: "triplet"
+      columns: ["query", "document", "negatives"]
+
+  - name: "fever"
+    bucket: "s3://contrastive/fever_hn_mine/shard-{00000..00001}.jsonl.gz"
+    query_prefix: "Instruct: Given a claim, retrieve documents that support or refute the claim\nClaim"
+    document_prefix: "search_document"
+    objective: 
+      type: "triplet"
+      columns: ["query", "document", "negatives"]
