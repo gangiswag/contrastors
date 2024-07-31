@@ -4,8 +4,6 @@ from typing import Optional, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from flash_attn.ops.layer_norm import dropout_add_layer_norm, dropout_add_layer_norm_parallel_residual
-from flash_attn.ops.rms_norm import RMSNorm, dropout_add_rms_norm, dropout_add_rms_norm_parallel_residual
 from torchvision.ops import StochasticDepth
 
 from contrastors.layers.activations import quick_gelu

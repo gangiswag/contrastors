@@ -5,8 +5,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from flash_attn.bert_padding import pad_input, unpad_input
-from flash_attn.ops.rms_norm import RMSNorm
 from transformers import AutoConfig, AutoModel, AutoTokenizer, PreTrainedModel
 
 from contrastors.layers.activations import quick_gelu
@@ -24,6 +22,12 @@ from contrastors.models.vit import (
     hf_vit_config_to_vit_config,
     timm_name_to_vit_config,
 )
+
+try:
+    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
+    from flash_attn.ops.rms_norm import RMSNorm, rms_norm
+except ImportError:
+    index_first_axis = pad_input = unpad_input = RMSNorm = rms_norm = None
 
 
 class LogitScale(nn.Module):

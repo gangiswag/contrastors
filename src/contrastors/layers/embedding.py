@@ -8,7 +8,6 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 from flash_attn.layers.rotary import RotaryEmbedding, apply_rotary_emb_func, apply_rotary_emb_kv_, apply_rotary_emb_qkv_
-from flash_attn.ops.fused_dense import FusedDense
 from torch.nn.modules.utils import _pair
 
 
