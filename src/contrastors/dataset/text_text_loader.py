@@ -546,7 +546,7 @@ class LocalShardDataset(Dataset):
     def download_rank_zero(self, s3_path):
         # only download if we are rank 0 otherwise wait for rank 0 to download
         # TODO: fix for multinode, need to update the if statement
-        local_path = Path(f"/tmp/{s3_path.replace('s3://', '')}")
+        local_path = Path(f"tmp/{s3_path.replace('s3://', '')}")
         if self.rank == 0:
             if not local_path.parent.exists():
                 local_path.parent.mkdir(parents=True, exist_ok=True)
@@ -561,7 +561,7 @@ class LocalShardDataset(Dataset):
         examples = []
         for path in tqdm(paths, desc="Loading examples", disable=self.rank > 0):
             ds_name = Path(path).parent.name
-            contrastive_type_metadata = self.path2objective[str(path).replace("/tmp/", "")]
+            contrastive_type_metadata = self.path2objective[str(path).replace("tmp/", "")]
             contrastive_type = contrastive_type_metadata["type"]
             columns = contrastive_type_metadata["columns"]
             table = read_json(path)

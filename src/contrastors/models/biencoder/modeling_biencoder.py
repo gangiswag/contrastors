@@ -7,27 +7,27 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoConfig, AutoModel, AutoTokenizer, PreTrainedModel
 
-from contrastors.layers.activations import quick_gelu
-from contrastors.layers.attention import FlashAttentionPooling
-from contrastors.layers.block import Block
-from contrastors.layers.mlp import MLP, GatedMLP
-from contrastors.models.decoder import DecoderModel
-from contrastors.models.decoder.gpt_neox import gpt_neox_config_to_gpt2_config
-from contrastors.models.decoder.open_lm import open_lm_config_to_gpt2_config
-from contrastors.models.encoder import NomicBertModel, bert_config_to_nomic_config
-from contrastors.models.vit import (
-    ViTModel,
-    clip_config_to_vit_config,
-    dino_config_to_vit_config,
-    hf_vit_config_to_vit_config,
-    timm_name_to_vit_config,
-)
+# from contrastors.layers.activations import quick_gelu
+# from contrastors.layers.attention import FlashAttentionPooling
+# from contrastors.layers.block import Block
+# from contrastors.layers.mlp import MLP, GatedMLP
+# from contrastors.models.decoder import DecoderModel
+# from contrastors.models.decoder.gpt_neox import gpt_neox_config_to_gpt2_config
+# from contrastors.models.decoder.open_lm import open_lm_config_to_gpt2_config
+# from contrastors.models.encoder import NomicBertModel, bert_config_to_nomic_config
+# from contrastors.models.vit import (
+#     ViTModel,
+#     clip_config_to_vit_config,
+#     dino_config_to_vit_config,
+#     hf_vit_config_to_vit_config,
+#     timm_name_to_vit_config,
+# )
 
-try:
-    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
-    from flash_attn.ops.rms_norm import RMSNorm, rms_norm
-except ImportError:
-    index_first_axis = pad_input = unpad_input = RMSNorm = rms_norm = None
+# try:
+#     from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
+#     from flash_attn.ops.rms_norm import RMSNorm, rms_norm
+# except ImportError:
+#     index_first_axis = pad_input = unpad_input = RMSNorm = rms_norm = None
 
 
 class LogitScale(nn.Module):
@@ -242,6 +242,8 @@ class BiEncoder(PreTrainedModel):
         else:
             if "gte-large" in config.model_name or "gte-base" in config.model_name:
                 self.trunk = AutoModel.from_pretrained(config.model_name, trust_remote_code=True, unpad_inputs=True, use_memory_efficient_attention=True, add_pooling_layer=False)
+            elif 'snowflake' in config.model_name:
+                self.trunk = AutoModel.from_pretrained(config.model_name, add_pooling_layer=False, trust_remote_code=True)
             elif "-instruct" in config.model_name:
                 self.trunk = AutoModel.from_pretrained(config.model_name, trust_remote_code=True)
                 tokenizer = AutoTokenizer.from_pretrained(config.model_name)

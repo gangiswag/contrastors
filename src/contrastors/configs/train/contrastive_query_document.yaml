@@ -10,7 +10,7 @@ train_args:
   log_lr_every: 10
   save_every: 1000000
   chunk_size: 32
-  output_dir: "/shared/nas2/revanth3/query_free_rag/exp/sanity/tuned_query_document/"
+  output_dir: "ckpts/init_run/"
   # if using deepspeed, this will be ignored
   schedule_type: "linear"
   max_grad_norm: 1.0
@@ -34,23 +34,23 @@ model_args:
 
 query_model_args:
   model_type: "query_document"
-  seq_len: 128
-  pooling: "last"
-  tokenizer_name: "Alibaba-NLP/gte-Qwen2-7B-instruct"
-  model_name: "Alibaba-NLP/gte-Qwen2-7B-instruct"
+  seq_len: 512
+  pooling: "cls"
+  tokenizer_name: "Alibaba-NLP/gte-large-en-v1.5"
+  model_name: "Alibaba-NLP/gte-large-en-v1.5"
   pretrained: true
   gradient_checkpointing: true
   # freeze: true
-  projection_dim: 1024
+  # projection_dim: 1024
   nomic_encoder: false
   use_fused_kernels: false
 
 document_model_args:
   model_type: "query_document"
-  seq_len: 1024
+  seq_len: 512
   pooling: "cls"
-  tokenizer_name: "Alibaba-NLP/gte-large-en-v1.5"
-  model_name: "Alibaba-NLP/gte-large-en-v1.5"
+  tokenizer_name: "Snowflake/snowflake-arctic-embed-l"
+  model_name: "Snowflake/snowflake-arctic-embed-l"
   gradient_checkpointing: true
   pretrained: true
   nomic_encoder: false
