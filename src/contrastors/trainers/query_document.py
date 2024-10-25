@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from pathlib import Path
 from deepspeed.checkpoint.utils import clone_tensors_for_torch_save
-from contrastors.dataset.text_text_loader import collate_fn, get_local_query_document_dataloader
+from contrastors.dataset.text_text_loader import collate_fn, get_local_query_document_dataloader, StreamingShardDataset
 from contrastors.distributed import gather_with_grad
 from contrastors.loss import clip_loss, grad_cache_loss
 from contrastors.models import DualEncoderText, DualEncoderTextConfig, LogitScale
@@ -81,26 +81,50 @@ class QueryDocumentTrainer(TextTextTrainer):
         model_args = config.model_args
         gradient_accumulation_steps = train_args.gradient_accumulation_steps        
         # config defines global batch size
-        if data_config.batch_size % self.num_processes != 0:
-            raise ValueError(
-                f"Batch size {data_config.batch_size} must be divisible by accelerator.num_processes {self.num_processes}"
+        if data_config.streaming:
+            train_dataset = StreamingShardDataset(
+                data_config.input_shards,
+                data_config.batch_size,
+                [self.query_tokenizer, self.document_tokenizer],
+                seed=data_config.seed,
+                add_eos=model_args.nomic_encoder != True,
+                add_prefix=model_args.add_prefix,
+                num_negatives=model_args.num_negatives,
+                download_locally=data_config.download,
+                process_one_shard=data_config.process_one_shard,
+                weighted_sampling=data_config.weighted_sampling,
+                verbose=data_config.verbose,
             )
+            if train_args.checkpoint is not None:
+                print(f"Loading dataloader state from {train_args.checkpoint}")
+                train_dataset.load_state(train_args.checkpoint)
 
-        batch_size = int(data_config.batch_size / self.num_processes)
-        train_dataloader = get_local_query_document_dataloader(
-            data_config.input_shards,
-            batch_size,
-            query_tokenizer=self.query_tokenizer,
-            document_tokenizer=self.document_tokenizer,
-            seed=data_config.seed,
-            num_negatives=model_args.num_negatives,
-            add_prefix=model_args.add_prefix,
-            num_workers=data_config.workers,
-            epoch=0,
-        )
-        self.total_num_steps = int(
-            len(train_dataloader.dataset) / gradient_accumulation_steps // data_config.batch_size
-        )
+            train_dataloader = DataLoader(train_dataset, batch_size=1, collate_fn=collate_fn, num_workers=0)
+            self.print(f"Len of train_dataloader: {len(train_dataset)}")
+            # round down in case
+
+            self.total_num_steps = int(len(train_dataset) / gradient_accumulation_steps // data_config.batch_size)
+        else:
+            if data_config.batch_size % self.num_processes != 0:
+                raise ValueError(
+                    f"Batch size {data_config.batch_size} must be divisible by accelerator.num_processes {self.num_processes}"
+                )
+
+            batch_size = int(data_config.batch_size / self.num_processes)
+            train_dataloader = get_local_query_document_dataloader(
+                data_config.input_shards,
+                batch_size,
+                query_tokenizer=self.query_tokenizer,
+                document_tokenizer=self.document_tokenizer,
+                seed=data_config.seed,
+                num_negatives=model_args.num_negatives,
+                add_prefix=model_args.add_prefix,
+                num_workers=data_config.workers,
+                epoch=0,
+            )
+            self.total_num_steps = int(
+                len(train_dataloader.dataset) / gradient_accumulation_steps // data_config.batch_size
+            )
 
         return {"train": train_dataloader, "val": None, "test": None}
 
@@ -161,9 +185,12 @@ class QueryDocumentTrainer(TextTextTrainer):
         return loss
     
     def _forward_step(self, model, batch, logit_scale, matryoshka_dims=None, matroyshka_loss_weights=None, **kwargs):
+        # if dist.get_rank() == 0:
+        #     import pdb;pdb.set_trace()
+        # dist.barrier()
+        dataset_name = batch.pop('dataset_name')
         inputs = {k: v.to(model.device) for k, v in batch.items()}
         query_outputs, document_outputs = model(inputs)
-        dataset_name = ""
         queries = query_outputs["embedding"]
         all_documents = gather_with_grad(document_outputs["embedding"])
 

@@ -31,6 +31,8 @@ def log_and_continue(exn):
 def collate_fn(batch):
     return batch[0]
 
+def add_eos_tok(eos_token, text):
+    return text if eos_token is None else text
 
 class StreamingShardDataset(IterableDataset):
     def __init__(
@@ -94,7 +96,11 @@ class StreamingShardDataset(IterableDataset):
         print_rank_zero(json.dumps(self.num_samples_per_shard, indent=3))
         print_rank_zero("Max samples per shard per rank")
         print_rank_zero(json.dumps(self.max_per_shard, indent=3))
-        self.tokenizer = tokenizer
+        if isinstance(tokenizer, list):
+            self.query_tokenizer = tokenizer[0]
+            self.document_tokenizer = tokenizer[1]
+        else:
+            self.tokenizer
 
         path = ds_spec.replace(".yaml", "")
         if not os.path.exists(path):
@@ -445,15 +451,25 @@ class StreamingShardDataset(IterableDataset):
             # this is stored in `document` now
             if col == "negative":
                 continue
+                
+            if hasattr(self, 'query_tokenizer'):
+                if col == 'query':
+                    tokenizer = self.query_tokenizer
+                elif col == 'document':
+                    tokenizer = self.document_tokenizer
+                else:
+                    raise RuntimeError('invalid col type')
+            else:
+                tokenizer = self.tokenizer
 
             if self.add_eos:
                 if isinstance(samples[0][col], list):
                     for sample in samples:
-                        sample[col] = [text + self.tokenizer.eos_token for text in sample[col]]
+                        sample[col] = [add_eos_tok(tokenizer.eos_token, text) for text in sample[col]]
                     collected = [sample[col] for sample in samples]
 
                 else:
-                    collected = [sample[col] + self.tokenizer.eos_token for sample in samples]
+                    collected = [add_eos_tok(tokenizer.eos_token, sample) for sample in samples]
             else:
                 collected = [sample[col] for sample in samples]
 
@@ -472,12 +488,12 @@ class StreamingShardDataset(IterableDataset):
 
                 collected = [f"{prefix}: {text}" for text in collected]
 
-            tokenized = self.tokenizer(collected, padding="max_length", truncation=True, return_tensors="pt")
+            tokenized = tokenizer(collected, padding="max_length", truncation=True, return_tensors="pt")
             # if text gets truncated, we want to make sure the last token is the eos token
             # attention mask will already be full of 1s so we don't need to update
             # if text doesn't get truncated, the eos token will be the last token
-            if self.add_eos:
-                tokenized["input_ids"][:, -1] = self.tokenizer.eos_token_id
+            if self.add_eos and tokenizer.eos_token_id is not None:
+                tokenized["input_ids"][:, -1] = tokenizer.eos_token_id
             tokenized = {f"{col}_{k}": v for k, v in tokenized.items()}
             tokenized_inputs = {**tokenized_inputs, **tokenized}
 
